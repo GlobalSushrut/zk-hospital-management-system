@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    .validation-result {
+        transition: all 0.3s ease;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+    }
+    
+    .validation-result.show {
+        max-height: 1000px;
+        opacity: 1;
+    }
+    
+    .code-block {
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        padding: 1rem;
+        font-family: monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+    }
+    
+    .tree-view {
+        font-family: monospace;
+    }
+    
+    .tree-view .branch {
+        padding-left: 20px;
+        position: relative;
+    }
+    
+    .tree-view .branch:before {
+        content: '├─';
+        position: absolute;
+        left: 0;
+    }
+    
+    .tree-view .branch:last-child:before {
+        content: '└─';
+    }
+    
+    .country-flag {
+        width: 24px;
+        height: 16px;
+        margin-right: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/policies">Policy Management</a></li>
+                    <li class="breadcrumb-item active">Validation Simulator</li>
+                </ol>
+            </nav>
+            
+            <h2 class="mb-3">
+                <i class="fas fa-shield-alt text-primary me-2"></i>
+                Policy Validation Simulator
+            </h2>
+            <p class="lead">Test the Location-Based Policy Agreement Engine with different roles, actions, and jurisdictions.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Simulation Parameters</h5>
+                </div>
+                <div class="card-body">
+                    <form id="validationForm">
+                        <div class="mb-3">
+                            <label for="role" class="form-label">Medical Role</label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="" selected disabled>Select role</option>
+                                {% for role in roles %}
+                                <option value="{{ role.id }}">{{ role.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">The healthcare practitioner role to validate</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="action" class="form-label">Action</label>
+                            <select class="form-select" id="action" name="action" required>
+                                <option value="" selected disabled>Select action</option>
+                                {% for action in actions %}
+                                <option value="{{ action.id }}">{{ action.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">The clinical action to be performed</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="country" class="form-label">Primary Jurisdiction</label>
+                            <select class="form-select" id="country" name="country" required>
+                                <option value="" selected disabled>Select country</option>
+                                {% for country in countries %}
+                                <option value="{{ country.code }}">{{ country.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">The country where the practitioner is located</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cross_jurisdiction" class="form-label">Cross-Border Jurisdiction (Optional)</label>
+                            <select class="form-select" id="cross_jurisdiction" name="cross_jurisdiction">
+                                <option value="" selected>None (Same country)</option>
+                                {% for country in countries %}
+                                <option value="{{ country.code }}">{{ country.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">For telemedicine across borders, select the patient's country</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-play-circle me-2"></i>Run Simulation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle me-2"></i>Validation Result</h5>
+                </div>
+                <div class="card-body">
+                    <div id="loadingResult" class="text-center py-5" style="display: none;">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Validating policy across jurisdictions...</p>
+                    </div>
+                    
+                    <div id="validationResult" class="validation-result">
+                        <!-- Results will be dynamically inserted here -->
+                        <div class="text-center py-5">
+                            <i class="fas fa-arrow-left fa-2x text-muted mb-3"></i>
+                            <p>Select parameters and run the simulation to see results</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-code me-2"></i>Raw Response</h5>
+                </div>
+                <div class="card-body">
+                    <div id="rawResponse" class="code-block">
+                        // Policy validation response will appear here
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>How It Works</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Policy Validation Process</h6>
+                            <div class="tree-view mb-4">
+                                <div>📍 Geographic Rule Tree</div>
+                                <div class="branch">Determines laws/regulations per country</div>
+                                <div class="branch">Maps required validators by jurisdiction</div>
+                                
+                                <div>🧠 Validator Tree</div>
+                                <div class="branch">Connects rules to official authorities</div>
+                                <div class="branch">Enforces proper validation chains</div>
+                                
+                                <div>🔐 Role-Based Identity Scope</div>
+                                <div class="branch">Checks practitioner's authority level</div>
+                                <div class="branch">Verifies role strength requirements</div>
+                                
+                                <div>🧾 Access Validator</div>
+                                <div class="branch">Ensures real-world legal mapping</div>
+                                <div class="branch last-child">Creates comprehensive audit trail</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Integration with Oracle Chain</h6>
+                            <p>After policy validation, the system integrates with the Oracle Chain Validator to:</p>
+                            <ul>
+                                <li>Validate against legal clauses and agreements</li>
+                                <li>Verify cross-jurisdictional compliance requirements</li>
+                                <li>Confirm proper licensing and credentialing</li>
+                                <li>Generate cryptographic proof of validation</li>
+                            </ul>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Pro Tip:</strong> Try various combinations of roles, actions, and jurisdictions to see how the policy engine handles different scenarios, especially cross-border cases.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const validationForm = document.getElementById('validationForm');
+        const loadingResult = document.getElementById('loadingResult');
+        const validationResult = document.getElementById('validationResult');
+        const rawResponse = document.getElementById('rawResponse');
+        
+        validationForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Show loading indicator
+            loadingResult.style.display = 'block';
+            validationResult.classList.remove('show');
+            
+            // Get form data
+            const formData = new FormData(validationForm);
+            
+            // Send validation request
+            fetch('/policies/simulate', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                loadingResult.style.display = 'none';
+                
+                // Display raw response
+                rawResponse.textContent = JSON.stringify(data, null, 2);
+                
+                // Build the formatted result
+                let resultHTML = '';
+                
+                // Policy validation result
+                const policyResult = data.policy_validation;
+                if (policyResult) {
+                    const allowed = policyResult.allowed;
+                    
+                    resultHTML += `
+                        <div class="text-center mb-4">
+                            <div class="mb-3">
+                                ${allowed ? 
+                                    '<i class="fas fa-check-circle fa-4x text-success"></i>' : 
+                                    '<i class="fas fa-times-circle fa-4x text-danger"></i>'}
+                            </div>
+                            <h3>${allowed ? 'Action Allowed' : 'Action Denied'}</h3>
+                            <p class="text-muted">${policyResult.reason || ''}</p>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card border-light mb-3">
+                                    <div class="card-header bg-light">Actor Information</div>
+                                    <div class="card-body">
+                                        <p><strong>Role:</strong> ${formData.get('role')}</p>
+                                        <p><strong>Jurisdiction:</strong> ${formData.get('country')}</p>
+                                        ${formData.get('cross_jurisdiction') ? 
+                                            `<p><strong>Cross-Border:</strong> ${formData.get('cross_jurisdiction')}</p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card border-light mb-3">
+                                    <div class="card-header bg-light">Validator Information</div>
+                                    <div class="card-body">
+                                        ${policyResult.validator_name ? 
+                                            `<p><strong>Validator:</strong> ${policyResult.validator_name}</p>` : 
+                                            '<p>No validator required</p>'}
+                                        <p><strong>Validation Time:</strong> ${new Date(policyResult.validation_time).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Oracle validation result (if present)
+                    const oracleResult = data.oracle_validation;
+                    if (oracleResult && allowed) {
+                        resultHTML += `
+                            <div class="card border-${oracleResult.oracle_validated ? 'success' : 'warning'} mb-3">
+                                <div class="card-header bg-${oracleResult.oracle_validated ? 'success' : 'warning'} text-white">
+                                    <i class="fas fa-balance-scale me-2"></i>Oracle Chain Validation
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Agreement ID:</strong> ${oracleResult.agreement_id}</p>
+                                    <p><strong>Oracle Validated:</strong> ${oracleResult.oracle_validated ? 'Yes' : 'No'}</p>
+                                    
+                                    <div class="mb-2"><strong>Clauses:</strong></div>
+                                    ${oracleResult.valid_clauses && oracleResult.valid_clauses.length > 0 ? 
+                                        `<div class="mb-2">
+                                            <span class="badge bg-success me-1">Valid</span> 
+                                            ${oracleResult.valid_clauses.join(', ')}
+                                        </div>` : ''}
+                                        
+                                    ${oracleResult.invalid_clauses && oracleResult.invalid_clauses.length > 0 ? 
+                                        `<div>
+                                            <span class="badge bg-danger me-1">Invalid</span> 
+                                            ${oracleResult.invalid_clauses.join(', ')}
+                                        </div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                // Update the validation result
+                validationResult.innerHTML = resultHTML;
+                validationResult.classList.add('show');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingResult.style.display = 'none';
+                validationResult.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        An error occurred during validation.
+                    </div>
+                `;
+                validationResult.classList.add('show');
+                rawResponse.textContent = `Error: ${error.message}`;
+            });
+        });
+    });
+</script>
+{% endblock %}

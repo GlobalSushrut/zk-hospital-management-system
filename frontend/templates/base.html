@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} | ZK Health HMS</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link href="/static/css/styles.css" rel="stylesheet">
+    <!-- Additional stylesheets -->
+    {% block styles %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100 bg-light">
+    <!-- Navigation -->
+    {% if request.path_params %}
+        {% include "includes/navigation.html" %}
+    {% endif %}
+    
+    <!-- Main Content -->
+    <main class="flex-shrink-0 py-4">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-dark text-white">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; {% now 'Y' %} ZK Health HMS. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>Powered by ZK-Proof-Based Decentralized Healthcare Infrastructure</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Bootstrap JS with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Additional scripts -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

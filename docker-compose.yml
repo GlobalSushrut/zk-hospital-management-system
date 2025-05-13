@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: zk-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    restart: always
+    networks:
+      - telemedicine_network
+
+  cassandra:
+    image: cassandra:latest
+    container_name: healthcare-cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    environment:
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=100M
+    restart: always
+    networks:
+      - telemedicine_network
+
+networks:
+  telemedicine_network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  cassandra_data:

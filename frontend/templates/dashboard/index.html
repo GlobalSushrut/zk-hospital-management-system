@@ -1,0 +1,374 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    .stat-card {
+        border-left: 4px solid;
+        transition: transform 0.3s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .stat-card.primary { border-left-color: #0d6efd; }
+    .stat-card.success { border-left-color: #198754; }
+    .stat-card.info { border-left-color: #0dcaf0; }
+    .stat-card.warning { border-left-color: #ffc107; }
+    
+    .policy-badge {
+        border-radius: 50px;
+        padding: 5px 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Welcome Banner -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-primary text-white shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="mb-1">Welcome, {{ user.full_name }}!</h2>
+                            <p class="mb-0">
+                                <i class="fas fa-map-marker-alt me-2"></i>{{ country }} | 
+                                <i class="fas fa-user-md me-2"></i>{{ role|replace('_', ' ')|title }}
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-0">{{ now().strftime('%A, %B %d, %Y') }}</p>
+                            <p class="mb-0"><i class="fas fa-shield-alt me-2"></i>ZK Proofs Validated</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Key Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card primary h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Active Patients</h6>
+                            <h2 class="mb-0">245</h2>
+                        </div>
+                        <div class="rounded-circle bg-light p-3">
+                            <i class="fas fa-user-injured fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card success h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Today's Consultations</h6>
+                            <h2 class="mb-0">12</h2>
+                        </div>
+                        <div class="rounded-circle bg-light p-3">
+                            <i class="fas fa-stethoscope fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card info h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Pending Documents</h6>
+                            <h2 class="mb-0">15</h2>
+                        </div>
+                        <div class="rounded-circle bg-light p-3">
+                            <i class="fas fa-file-medical fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card stat-card warning h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Consent Requests</h6>
+                            <h2 class="mb-0">7</h2>
+                        </div>
+                        <div class="rounded-circle bg-light p-3">
+                            <i class="fas fa-handshake fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Allowed Actions from Policy Engine -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-check-circle text-success me-2"></i>Allowed Actions</h5>
+                        <span class="badge bg-primary">{{ country }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        {% for action in allowed_actions %}
+                        <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ action.name }}</h6>
+                                <small class="text-muted">{{ action.validator }}</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill">
+                                <i class="fas fa-check me-1"></i>Allowed
+                            </span>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-info-circle fa-2x text-muted mb-3"></i>
+                            <p>Loading allowed actions from Policy Engine...</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="/policies/validation-simulator" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-sliders-h me-1"></i>Validate More Actions
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Consultations -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-calendar-check text-primary me-2"></i>Recent Consultations</h5>
+                        <a href="/consultations" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if recent_consultations %}
+                                    {% for consultation in recent_consultations %}
+                                    <tr>
+                                        <td>{{ consultation.patient_name }}</td>
+                                        <td>{{ consultation.date }}</td>
+                                        <td>
+                                            {% if consultation.type == "Telemedicine" %}
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-video me-1"></i>Telemedicine
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-user-md me-1"></i>In-Person
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if consultation.status == "Completed" %}
+                                            <span class="badge bg-success">Completed</span>
+                                            {% elif consultation.status == "Scheduled" %}
+                                            <span class="badge bg-warning">Scheduled</span>
+                                            {% elif consultation.status == "In Progress" %}
+                                            <span class="badge bg-primary">In Progress</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ consultation.status }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="/consultations/{{ consultation.id }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <i class="fas fa-calendar-day fa-2x text-muted mb-3"></i>
+                                            <p class="mb-0">No recent consultations found.</p>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Pending Consent Requests -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-file-signature text-warning me-2"></i>Pending Consent Requests</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for consent in pending_consents %}
+                        <div class="list-group-item px-3 py-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">{{ consent.description }}</h6>
+                                <span class="badge bg-warning">Pending</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">ID: {{ consent.id }}</small>
+                                <div>
+                                    <button class="btn btn-sm btn-success me-1">
+                                        <i class="fas fa-check me-1"></i>Approve
+                                    </button>
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times me-1"></i>Deny
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-2x text-muted mb-3"></i>
+                            <p>No pending consent requests.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="/oracle/agreements" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-list me-1"></i>View All Agreements
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Treatments -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-heartbeat text-danger me-2"></i>Active Treatments</h5>
+                        <a href="/treatments" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for treatment in active_treatments %}
+                        <div class="list-group-item px-3 py-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h6 class="mb-0">{{ treatment.patient_name }}</h6>
+                                <span class="badge bg-primary">{{ treatment.condition }}</span>
+                            </div>
+                            <div class="progress mt-2 mb-2" style="height: 5px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 25%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">ID: {{ treatment.id }}</small>
+                                <a href="/treatments/{{ treatment.id }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-clipboard-list me-1"></i>Update
+                                </a>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-procedures fa-2x text-muted mb-3"></i>
+                            <p>No active treatments found.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt text-warning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="/patients/register" class="btn btn-outline-primary d-block py-3">
+                                <i class="fas fa-user-plus fa-2x mb-2"></i><br>
+                                Register Patient
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/consultations/create" class="btn btn-outline-success d-block py-3">
+                                <i class="fas fa-calendar-plus fa-2x mb-2"></i><br>
+                                New Consultation
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/treatments/create" class="btn btn-outline-info d-block py-3">
+                                <i class="fas fa-notes-medical fa-2x mb-2"></i><br>
+                                Create Treatment
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="/documents" class="btn btn-outline-secondary d-block py-3">
+                                <i class="fas fa-file-upload fa-2x mb-2"></i><br>
+                                Upload Document
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Dashboard page initialization
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fetch dashboard statistics
+        fetch('/dashboard/stats')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Dashboard stats:', data);
+                // Update dashboard stats if needed
+            })
+            .catch(error => console.error('Error fetching dashboard stats:', error));
+            
+        // Fetch recent activity
+        fetch('/dashboard/activity')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Recent activity:', data);
+                // Update activity feed if needed
+            })
+            .catch(error => console.error('Error fetching activity:', error));
+    });
+</script>
+{% endblock %}

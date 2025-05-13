@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # ZK Health HMS Frontend
+  frontend:
+    build: .
+    container_name: zk-health-frontend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - HOST=0.0.0.0
+      - PORT=8000
+      - SECRET_KEY=your-secret-key-change-in-production
+      - ZK_API_BASE_URL=http://backend:8080
+      - MONGODB_URL=mongodb://mongo:27017
+      - MONGODB_DB=zk_health_hms
+      - DEFAULT_COUNTRY=US
+    depends_on:
+      - backend
+      - mongo
+    networks:
+      - zk-health-network
+    volumes:
+      - ./:/app
+
+  # ZK Health Infrastructure Backend
+  backend:
+    build: 
+      context: ..
+      dockerfile: Dockerfile
+    container_name: zk-health-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - DEBUG=false
+    networks:
+      - zk-health-network
+    volumes:
+      - ../:/app
+
+  # MongoDB for storing HMS data
+  mongo:
+    image: mongo:6.0
+    container_name: zk-health-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_DATA_DIR=/data/db
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - zk-health-network
+
+networks:
+  zk-health-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

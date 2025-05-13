@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    .agreement-card {
+        transition: transform 0.3s ease;
+    }
+    .agreement-card:hover {
+        transform: translateY(-5px);
+    }
+    .agreement-badge {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Oracle Agreements</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-balance-scale text-primary me-2"></i>
+                        Oracle Agreements
+                    </h2>
+                    <p class="text-muted">Legal and compliance frameworks for healthcare operations</p>
+                </div>
+                <a href="/oracle/create" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>Create Agreement
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="search" placeholder="Search agreements...">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select class="form-select" id="type">
+                                <option value="">All Types</option>
+                                <option value="consent">Consent Agreement</option>
+                                <option value="legal_compliance">Legal Compliance</option>
+                                <option value="medical_protocol">Medical Protocol</option>
+                                <option value="data_sharing">Data Sharing</option>
+                                <option value="research">Research Protocol</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="country" class="form-label">Country</label>
+                            <select class="form-select" id="country">
+                                <option value="">All Countries</option>
+                                <option value="IN">India</option>
+                                <option value="US">United States</option>
+                                <option value="CA">Canada</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="AU">Australia</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        {% if agreements %}
+            {% for agreement in agreements %}
+            <div class="col-md-4 mb-4">
+                <div class="card agreement-card h-100 shadow-sm">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 text-truncate">{{ agreement.name }}</h5>
+                            <span class="badge bg-success">{{ agreement.status }}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex mb-2">
+                                <div class="me-3">
+                                    <span class="badge bg-primary agreement-badge">
+                                        <i class="fas fa-tag me-1"></i>{{ agreement.type|replace('_', ' ')|title }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="badge bg-secondary agreement-badge">
+                                        <i class="fas fa-globe me-1"></i>{{ agreement.country }}
+                                        {% if agreement.cross_jurisdiction %}
+                                        ↔ {{ agreement.cross_jurisdiction }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <span class="badge bg-light text-dark agreement-badge">
+                                    <i class="fas fa-list me-1"></i>{{ agreement.clauses_count }} Clauses
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Created: {{ agreement.created_date }}</small>
+                            <div>
+                                <a href="/oracle/{{ agreement.id }}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="/oracle/validate/{{ agreement.id }}" class="btn btn-sm btn-outline-success">
+                                    <i class="fas fa-check-circle"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-balance-scale fa-4x text-muted mb-3"></i>
+                        <h4>No Oracle Agreements Found</h4>
+                        <p class="text-muted mb-4">Create your first agreement to get started.</p>
+                        <a href="/oracle/create" class="btn btn-primary">
+                            <i class="fas fa-plus-circle me-2"></i>Create Agreement
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle text-primary me-2"></i>About Oracle Agreements</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">What are Oracle Agreements?</h6>
+                            <p>Oracle Agreements are legally binding smart contracts that enforce healthcare compliance rules across different jurisdictions. They connect healthcare actions to real-world legal frameworks using the ZK Oracle Chain Validator.</p>
+                            
+                            <h6 class="mb-3 mt-4">Key Benefits:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Automatic compliance with legal and regulatory requirements</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Cross-border healthcare delivery with jurisdictional validation</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Cryptographic proof of policy adherence</li>
+                                <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Integration with Location-Based Policy Engine</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Using Oracle Agreements</h6>
+                            <ol>
+                                <li class="mb-2">Create an agreement with appropriate clauses for your healthcare context</li>
+                                <li class="mb-2">Validate healthcare actions against the agreement</li>
+                                <li class="mb-2">Get verification from medical/legal authorities through the validator chain</li>
+                                <li class="mb-2">Maintain an immutable audit trail of all validations</li>
+                            </ol>
+                            
+                            <div class="alert alert-info mt-4">
+                                <div class="d-flex">
+                                    <div class="me-3">
+                                        <i class="fas fa-lightbulb fa-2x"></i>
+                                    </div>
+                                    <div>
+                                        <h6>Pro Tip</h6>
+                                        <p class="mb-0">Use the template library to quickly create agreements based on common healthcare scenarios and jurisdictional requirements.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="/oracle/templates" class="btn btn-outline-primary">
+                        <i class="fas fa-book me-2"></i>Browse Template Library
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter functionality
+        const form = document.querySelector('form');
+        const searchInput = document.getElementById('search');
+        const typeSelect = document.getElementById('type');
+        const countrySelect = document.getElementById('country');
+        
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Get filter values
+            const search = searchInput.value.toLowerCase();
+            const type = typeSelect.value;
+            const country = countrySelect.value;
+            
+            // Filter agreements
+            const agreements = document.querySelectorAll('.agreement-card');
+            
+            agreements.forEach(agreement => {
+                const card = agreement.closest('.col-md-4');
+                const name = agreement.querySelector('h5').textContent.toLowerCase();
+                const agreementType = agreement.querySelector('.badge.bg-primary').textContent.toLowerCase();
+                const agreementCountry = agreement.querySelector('.badge.bg-secondary').textContent;
+                
+                let show = true;
+                
+                // Filter by search
+                if (search && !name.includes(search)) {
+                    show = false;
+                }
+                
+                // Filter by type
+                if (type && !agreementType.includes(type.replace('_', ' '))) {
+                    show = false;
+                }
+                
+                // Filter by country
+                if (country && !agreementCountry.includes(country)) {
+                    show = false;
+                }
+                
+                // Show/hide card
+                card.style.display = show ? 'block' : 'none';
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{
+  "identity": {
+    "zk_proof_generation": {
+      "avg_time": 4.525268077850342,
+      "min_time": 3.0748844146728516,
+      "max_time": 10.563373565673828,
+      "throughput": 220.9813833780726
+    },
+    "identity_verification": {
+      "avg_time": 3.8935232162475586,
+      "min_time": 2.5169849395751953,
+      "max_time": 6.872892379760742,
+      "throughput": 256.836788805324
+    },
+    "claim_validation": {
+      "avg_time": 4.201915264129639,
+      "min_time": 2.5284290313720703,
+      "max_time": 9.193897247314453,
+      "throughput": 237.98671252051878
+    },
+    "identity_retrieval": {
+      "avg_time": 15.719664096832275,
+      "min_time": 8.977890014648438,
+      "max_time": 40.73977470397949,
+      "throughput": 63.61459086148752
+    }
+  },
+  "document": {
+    "document_upload": {
+      "avg_time": 7.380354404449463,
+      "min_time": 4.672765731811523,
+      "max_time": 26.38983726501465,
+      "throughput": 135.49484824158588
+    },
+    "document_verification": {
+      "avg_time": 5.946028232574463,
+      "min_time": 2.979755401611328,
+      "max_time": 14.623880386352539,
+      "throughput": 168.17949072653968
+    },
+    "document_retrieval": {
+      "avg_time": 22.753889560699463,
+      "min_time": 13.8702392578125,
+      "max_time": 42.94300079345703,
+      "throughput": 43.948530088991944
+    },
+    "document_zkproof": {
+      "avg_time": 4.901254177093506,
+      "min_time": 3.3533573150634766,
+      "max_time": 18.688201904296875,
+      "throughput": 204.02941040552406
+    },
+    "selective_disclosure": {
+      "avg_time": 4.823470115661621,
+      "min_time": 2.9566287994384766,
+      "max_time": 9.410381317138672,
+      "throughput": 207.31962177044252
+    },
+    "batch_processing": {
+      "avg_time": 77.01160907745361,
+      "min_time": 34.420013427734375,
+      "max_time": 164.13593292236328,
+      "throughput": 162.31319082592154
+    }
+  },
+  "policy": {
+    "policy_validation": {
+      "avg_time": 3.4079408645629883,
+      "min_time": 1.9726753234863281,
+      "max_time": 10.520458221435547,
+      "throughput": 293.4323216691829
+    },
+    "cross_jurisdiction": {
+      "avg_time": 2.806670665740967,
+      "min_time": 1.8126964569091797,
+      "max_time": 7.346630096435547,
+      "throughput": 356.2940291521513
+    },
+    "role_validation": {
+      "avg_time": 2.820250988006592,
+      "min_time": 1.8031597137451172,
+      "max_time": 7.224082946777344,
+      "throughput": 354.5783705963062
+    },
+    "validator_selection": {
+      "avg_time": 2.741403579711914,
+      "min_time": 1.7886161804199219,
+      "max_time": 5.496025085449219,
+      "throughput": 364.7766448547087
+    },
+    "policy_oracle_integration": {
+      "avg_time": 2.6642799377441406,
+      "min_time": 1.7852783203125,
+      "max_time": 6.311655044555664,
+      "throughput": 375.3359344238823
+    }
+  },
+  "gateway": {
+    "token_generation": {
+      "avg_time": 6.2476372718811035,
+      "min_time": 3.438711166381836,
+      "max_time": 23.62799644470215,
+      "throughput": 160.06050871434627
+    },
+    "token_validation": {
+      "avg_time": 4.152512550354004,
+      "min_time": 2.367258071899414,
+      "max_time": 8.922338485717773,
+      "throughput": 240.81805602604368
+    },
+    "request_routing": {
+      "avg_time": 2.8092312812805176,
+      "min_time": 1.7282962799072266,
+      "max_time": 6.32786750793457,
+      "throughput": 355.9692669890017
+    },
+    "request_throttling": {
+      "avg_time": 2.567627429962158,
+      "min_time": 1.7614364624023438,
+      "max_time": 6.9217681884765625,
+      "throughput": 389.4646039105206
+    },
+    "rbac_verification": {
+      "avg_time": 3.215451240539551,
+      "min_time": 1.8916130065917969,
+      "max_time": 7.643938064575195,
+      "throughput": 310.9983405726285
+    },
+    "cross_service_auth": {
+      "avg_time": 3.382430076599121,
+      "min_time": 2.315044403076172,
+      "max_time": 6.141424179077148,
+      "throughput": 295.6454316434693
+    }
+  },
+  "total_time": 13.405986070632935
+}

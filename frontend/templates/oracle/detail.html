@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    .clause-card {
+        border-left: 4px solid #0d6efd;
+        transition: all 0.2s ease;
+    }
+    
+    .clause-card:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .validation-history-item {
+        transition: all 0.3s ease;
+    }
+    
+    .validation-history-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .validated-clause {
+        background-color: rgba(25, 135, 84, 0.1);
+        border-color: #198754;
+    }
+    
+    .failed-clause {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/oracle">Oracle Agreements</a></li>
+                    <li class="breadcrumb-item active">{{ agreement.name }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-balance-scale text-primary me-2"></i>
+                        {{ agreement.name }}
+                    </h2>
+                    <p class="text-muted">
+                        <span class="badge bg-primary me-2">{{ agreement.type|replace('_', ' ')|title }}</span>
+                        <span class="badge bg-secondary me-2">{{ agreement.country }}</span>
+                        {% if agreement.cross_jurisdiction %}
+                        <span class="badge bg-info">Cross-Border: {{ agreement.cross_jurisdiction }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div>
+                    <a href="/oracle/validate/{{ agreement.id }}" class="btn btn-success me-2">
+                        <i class="fas fa-check-circle me-2"></i>Validate
+                    </a>
+                    <a href="#" class="btn btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-file-contract text-primary me-2"></i>Agreement Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6 class="mb-2">Description</h6>
+                        <p>{{ agreement.description }}</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="mb-3">Clauses</h6>
+                        <div class="accordion" id="clausesAccordion">
+                            {% for clause in agreement.clauses %}
+                            <div class="accordion-item clause-card mb-2">
+                                <h2 class="accordion-header" id="heading{{ loop.index }}">
+                                    <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" 
+                                            data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}">
+                                        <strong>Clause {{ loop.index }}:</strong> <span class="ms-2">{{ clause.text|truncate(60) }}</span>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" 
+                                     data-bs-parent="#clausesAccordion">
+                                    <div class="accordion-body">
+                                        <p>{{ clause.text }}</p>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">ID: {{ clause.id }}</span>
+                                            <span class="badge bg-success">Required for Validation</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-2">Agreement Information</h6>
+                            <table class="table table-sm">
+                                <tr>
+                                    <th class="w-40">ID</th>
+                                    <td>{{ agreement.id }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Created By</th>
+                                    <td>{{ agreement.created_by }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Created Date</th>
+                                    <td>{{ agreement.created_date }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status</th>
+                                    <td>
+                                        <span class="badge bg-success">{{ agreement.status }}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="mb-2">Validators</h6>
+                            <ul class="list-group">
+                                {% if agreement.country == "IN" %}
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>Medical Council of India
+                                </li>
+                                {% elif agreement.country == "US" %}
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>US Department of HHS
+                                </li>
+                                {% elif agreement.country == "CA" %}
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>Health Canada
+                                </li>
+                                {% elif agreement.country == "GB" %}
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>NHS UK
+                                </li>
+                                {% else %}
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>Default Medical Authority
+                                </li>
+                                {% endif %}
+                                
+                                {% if agreement.cross_jurisdiction %}
+                                    {% if agreement.cross_jurisdiction == "IN" %}
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check-circle text-success me-2"></i>Medical Council of India
+                                    </li>
+                                    {% elif agreement.cross_jurisdiction == "US" %}
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check-circle text-success me-2"></i>US Department of HHS
+                                    </li>
+                                    {% elif agreement.cross_jurisdiction == "CA" %}
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check-circle text-success me-2"></i>Health Canada
+                                    </li>
+                                    {% elif agreement.cross_jurisdiction == "GB" %}
+                                    <li class="list-group-item">
+                                        <i class="fas fa-check-circle text-success me-2"></i>NHS UK
+                                    </li>
+                                    {% endif %}
+                                {% endif %}
+                                
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>ZK Oracle Chain Validator
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-history text-primary me-2"></i>Validation History</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for validation in validation_history %}
+                        <div class="list-group-item p-3 validation-history-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold">{{ validation.actor_name }}</div>
+                                    <small class="text-muted">{{ validation.timestamp }}</small>
+                                </div>
+                                <span class="badge bg-{% if validation.status == 'Valid' %}success{% else %}danger{% endif %}">
+                                    {{ validation.status }}
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2"><i class="fas fa-cog text-primary"></i></span>
+                                    <span>Action: <strong>{{ validation.action }}</strong></span>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <small class="d-block mb-1">Clauses:</small>
+                                    <div>
+                                        {% for clause_id in validation.clauses_validated %}
+                                            <span class="badge bg-light text-success border border-success me-1 mb-1">
+                                                {{ clause_id }}
+                                            </span>
+                                        {% endfor %}
+                                        
+                                        {% if validation.clauses_failed %}
+                                            {% for clause_id in validation.clauses_failed %}
+                                                <span class="badge bg-light text-danger border border-danger me-1 mb-1">
+                                                    {{ clause_id }}
+                                                </span>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                            <p>No validation history found.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-grid">
+                        <a href="/oracle/validate/{{ agreement.id }}" class="btn btn-primary">
+                            <i class="fas fa-check-circle me-2"></i>Validate Agreement
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt text-primary me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-file-export me-2"></i>Export Agreement
+                        </a>
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-copy me-2"></i>Clone Agreement
+                        </a>
+                        <button class="btn btn-outline-danger">
+                            <i class="fas fa-pause-circle me-2"></i>Suspend Agreement
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Highlight validated clauses (for demonstration)
+        const validateClause = (clauseId, status) => {
+            const clauseElement = document.querySelector(`[id^="collapse"]:has(:contains("${clauseId}"))`);
+            if (clauseElement) {
+                if (status === 'valid') {
+                    clauseElement.classList.add('validated-clause');
+                } else {
+                    clauseElement.classList.add('failed-clause');
+                }
+            }
+        };
+        
+        // This would be populated from actual validation data in a real implementation
+    });
+</script>
+{% endblock %}

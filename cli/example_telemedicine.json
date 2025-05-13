@@ -1,0 +1,51 @@
+{
+  "clauses": [
+    {
+      "clause_id": "telemedicine-jurisdiction",
+      "title": "Jurisdictional Compliance",
+      "type": "legal",
+      "description": "Ensures telemedicine practice complies with local laws",
+      "preconditions": {
+        "doctor_licensed_in_jurisdiction": true,
+        "patient_location_verified": true,
+        "service_allowed_in_jurisdiction": true
+      },
+      "execute": {
+        "log_jurisdictional_check": true,
+        "apply_local_regulations": true
+      }
+    },
+    {
+      "clause_id": "telemedicine-prescription",
+      "title": "Prescription Issuance",
+      "type": "medical",
+      "description": "Controls electronic prescription issuance",
+      "preconditions": {
+        "valid_consultation": true,
+        "doctor_prescription_rights": true,
+        "medication_allowed_for_telemedicine": true,
+        "patient_identity_verified": true
+      },
+      "execute": {
+        "generate_secure_prescription": true,
+        "log_prescription_details": true,
+        "notify_pharmacy": true
+      }
+    },
+    {
+      "clause_id": "telemedicine-emergency-protocol",
+      "title": "Emergency Protocol",
+      "type": "safety",
+      "description": "Defines actions in case of medical emergency during teleconsultation",
+      "preconditions": {
+        "emergency_detected": true,
+        "patient_location_known": true
+      },
+      "execute": {
+        "notify_emergency_services": true,
+        "provide_patient_data": true,
+        "document_incident": true
+      }
+    }
+  ]
+}

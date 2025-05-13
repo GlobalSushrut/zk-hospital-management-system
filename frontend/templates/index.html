@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="mb-5">
+                <h1 class="display-4 fw-bold text-primary">ZK Health HMS</h1>
+                <h2 class="mb-4">Zero-Knowledge Proof Based Hospital Management System</h2>
+                <p class="lead mb-4">A secure, privacy-focused solution for healthcare providers utilizing zero-knowledge proofs for enhanced data privacy and compliance with jurisdictional regulations.</p>
+                <div class="d-grid gap-2 d-sm-flex">
+                    <a href="/auth/login" class="btn btn-primary btn-lg px-4 gap-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <a href="/auth/register" class="btn btn-outline-secondary btn-lg px-4">
+                        <i class="fas fa-user-plus me-2"></i>Register
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="p-4 bg-white shadow-sm rounded">
+                <h3 class="mb-3 text-primary"><i class="fas fa-shield-alt me-2"></i>Enhanced Privacy & Security</h3>
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Zero-knowledge proof verification</li>
+                    <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>End-to-end encrypted medical records</li>
+                    <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Consent-driven data sharing</li>
+                    <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Automated policy compliance</li>
+                </ul>
+                
+                <h3 class="mb-3 text-primary"><i class="fas fa-globe me-2"></i>Location-Based Policy Engine</h3>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Role-based access control</li>
+                    <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Cross-jurisdictional validation</li>
+                    <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Oracle chain validation</li>
+                    <li class="list-group-item"><i class="fas fa-check-circle text-success me-2"></i>Comprehensive audit trails</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-5">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                    <h4 class="card-title">For Healthcare Providers</h4>
+                    <p class="card-text">Streamline workflows while ensuring compliance with varying jurisdictional requirements.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-injured fa-3x text-primary mb-3"></i>
+                    <h4 class="card-title">For Patients</h4>
+                    <p class="card-text">Enhanced privacy protection and control over your medical data and consent management.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-hospital fa-3x text-primary mb-3"></i>
+                    <h4 class="card-title">For Administrators</h4>
+                    <p class="card-text">Comprehensive tools for managing healthcare operations with regulatory compliance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

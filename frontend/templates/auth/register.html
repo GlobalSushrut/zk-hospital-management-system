@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h1 class="h3 text-primary mb-3">
+                            <i class="fas fa-heartbeat me-2"></i>ZK Health HMS
+                        </h1>
+                        <h2 class="h4 mb-3">Create Account</h2>
+                        <p class="text-muted">Register for secure access to ZK Health HMS</p>
+                    </div>
+                    
+                    <form action="/auth/register" method="POST" class="needs-validation" novalidate>
+                        <div class="row mb-3">
+                            <div class="col-md-12 mb-3">
+                                <label for="full_name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="full_name" name="full_name" required>
+                                <div class="invalid-feedback">Please enter your full name.</div>
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                                <div class="invalid-feedback">Please enter a valid email address.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="role" class="form-label">Role</label>
+                                <select class="form-select" id="role" name="role" required>
+                                    <option value="" selected disabled>Select Role</option>
+                                    <option value="general_doctor">General Physician</option>
+                                    <option value="specialist">Specialist Doctor</option>
+                                    <option value="nurse">Nurse</option>
+                                    <option value="admin">Administrator</option>
+                                    <option value="researcher">Researcher</option>
+                                </select>
+                                <div class="invalid-feedback">Please select your role.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="country" class="form-label">Country</label>
+                                <select class="form-select" id="country" name="country" required>
+                                    <option value="" selected disabled>Select Country</option>
+                                    <option value="IN">India</option>
+                                    <option value="US">United States</option>
+                                    <option value="CA">Canada</option>
+                                    <option value="GB">United Kingdom</option>
+                                    <option value="AU">Australia</option>
+                                </select>
+                                <div class="invalid-feedback">Please select your country.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" minlength="8" required>
+                                <div class="invalid-feedback">Password must be at least 8 characters.</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="confirm_password" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                <div class="invalid-feedback">Passwords do not match.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="agree_terms" required>
+                                <label class="form-check-label" for="agree_terms">
+                                    I agree to the <a href="#" class="text-primary">Terms of Service</a> and <a href="#" class="text-primary">Privacy Policy</a>
+                                </label>
+                                <div class="invalid-feedback">You must agree before submitting.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button class="btn btn-primary btn-lg" type="submit">
+                                <i class="fas fa-user-plus me-2"></i>Register Account
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p>Already have an account? <a href="/auth/login" class="text-primary">Sign In</a></p>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <p class="small text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Protected by ZK-Proof Technology
+                        </p>
+                        <p class="small text-muted">
+                            Your credentials will be verified against your professional medical licenses
+                            using zero-knowledge proofs for enhanced privacy.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        
+        window.addEventListener('load', function() {
+            // Validate forms
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+            
+            // Password confirmation validation
+            var password = document.getElementById("password");
+            var confirmPassword = document.getElementById("confirm_password");
+            
+            function validatePassword() {
+                if (password.value != confirmPassword.value) {
+                    confirmPassword.setCustomValidity("Passwords don't match");
+                } else {
+                    confirmPassword.setCustomValidity('');
+                }
+            }
+            
+            if (password && confirmPassword) {
+                password.addEventListener("change", validatePassword);
+                confirmPassword.addEventListener("keyup", validatePassword);
+            }
+        }, false);
+    })();
+</script>
+{% endblock %}

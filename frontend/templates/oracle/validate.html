@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<style>
+    .validation-result {
+        transition: all 0.3s ease;
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+    }
+    
+    .validation-result.show {
+        max-height: 1000px;
+        opacity: 1;
+    }
+    
+    .code-block {
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        padding: 1rem;
+        font-family: monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+    }
+    
+    .oracle-clause {
+        transition: all 0.2s ease;
+        border-left: 4px solid #6c757d;
+    }
+    
+    .oracle-clause.valid {
+        border-left-color: #198754;
+        background-color: rgba(25, 135, 84, 0.1);
+    }
+    
+    .oracle-clause.invalid {
+        border-left-color: #dc3545;
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    .validation-steps .step {
+        position: relative;
+        padding-left: 30px;
+        margin-bottom: 15px;
+    }
+    
+    .validation-steps .step:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        z-index: 1;
+    }
+    
+    .validation-steps .step:after {
+        content: '';
+        position: absolute;
+        left: 9px;
+        top: 20px;
+        height: calc(100% - 5px);
+        width: 2px;
+        background-color: #e9ecef;
+    }
+    
+    .validation-steps .step:last-child:after {
+        display: none;
+    }
+    
+    .validation-steps .step.active:before {
+        background-color: #0d6efd;
+    }
+    
+    .validation-steps .step.active:after {
+        background-color: #0d6efd;
+    }
+    
+    .validation-steps .step.completed:before {
+        background-color: #198754;
+    }
+    
+    .validation-steps .step.completed:after {
+        background-color: #198754;
+    }
+    
+    .validation-steps .step-content {
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/oracle">Oracle Agreements</a></li>
+                    <li class="breadcrumb-item"><a href="/oracle/{{ agreement.id }}">{{ agreement.name }}</a></li>
+                    <li class="breadcrumb-item active">Validate</li>
+                </ol>
+            </nav>
+            
+            <h2 class="mb-3">
+                <i class="fas fa-check-circle text-primary me-2"></i>
+                Validate Oracle Agreement
+            </h2>
+            <p class="lead">Validate healthcare actions against legal and regulatory requirements</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-5 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Validation Parameters</h5>
+                </div>
+                <div class="card-body">
+                    <form id="validationForm">
+                        <div class="mb-3">
+                            <label for="agreement_id" class="form-label">Agreement</label>
+                            <input type="text" class="form-control" id="agreement_id" value="{{ agreement.id }}" readonly>
+                            <div class="form-text">{{ agreement.name }}</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="action" class="form-label">Healthcare Action</label>
+                            <select class="form-select" id="action" name="action" required>
+                                <option value="" selected disabled>Select an action to validate</option>
+                                {% for action in actions %}
+                                <option value="{{ action.id }}">{{ action.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">The medical action being performed</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="resource_type" class="form-label">Resource Type</label>
+                            <select class="form-select" id="resource_type" name="resource_type" required>
+                                <option value="" selected disabled>Select resource type</option>
+                                <option value="patient_record">Patient Record</option>
+                                <option value="prescription">Prescription</option>
+                                <option value="diagnostic_report">Diagnostic Report</option>
+                                <option value="medical_certificate">Medical Certificate</option>
+                                <option value="treatment_plan">Treatment Plan</option>
+                            </select>
+                            <div class="form-text">Type of healthcare resource being accessed</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="resource_id" class="form-label">Resource ID</label>
+                            <input type="text" class="form-control" id="resource_id" name="resource_id" placeholder="e.g., PAT12345 or MED98765" required>
+                            <div class="form-text">Identifier for the specific resource</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check-circle me-2"></i>Validate
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Validation Process</h5>
+                </div>
+                <div class="card-body">
+                    <div class="validation-steps">
+                        <div class="step" id="step1">
+                            <div class="step-content">
+                                <h6>1. Policy Validation</h6>
+                                <p class="text-muted">Confirm action is allowed based on your role and jurisdiction</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step" id="step2">
+                            <div class="step-content">
+                                <h6>2. Oracle Clause Verification</h6>
+                                <p class="text-muted">Validate against legal and regulatory clauses</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step" id="step3">
+                            <div class="step-content">
+                                <h6>3. Authority Confirmation</h6>
+                                <p class="text-muted">Verify with official medical/legal authorities</p>
+                            </div>
+                        </div>
+                        
+                        <div class="step" id="step4">
+                            <div class="step-content">
+                                <h6>4. ZK Proof Generation</h6>
+                                <p class="text-muted">Create cryptographic proof of validation</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-7 mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-check me-2"></i>Validation Result</h5>
+                </div>
+                <div class="card-body">
+                    <div id="loadingResult" class="text-center py-5" style="display: none;">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p>Validating against Oracle Chain...</p>
+                    </div>
+                    
+                    <div id="validationResult" class="validation-result">
+                        <!-- Results will be dynamically inserted here -->
+                        <div class="text-center py-5">
+                            <i class="fas fa-arrow-left fa-2x text-muted mb-3"></i>
+                            <p>Select parameters and validate to see results</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-code me-2"></i>Technical Details</h5>
+                </div>
+                <div class="card-body">
+                    <div id="technicalDetails" class="code-block">
+                        // Validation details will appear here
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>What Is Oracle Chain Validation?</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <p>Oracle Chain Validation connects healthcare actions to real-world legal frameworks, ensuring compliance with jurisdictional regulations. This process:</p>
+                            
+                            <ul>
+                                <li><strong>Validates your medical authority</strong> to perform specific actions based on your role and credentials</li>
+                                <li><strong>Verifies compliance</strong> with local and cross-border healthcare regulations</li>
+                                <li><strong>Generates cryptographic proof</strong> that the action has been properly validated</li>
+                                <li><strong>Creates an immutable audit trail</strong> for regulatory compliance</li>
+                            </ul>
+                            
+                            <p>All validations are performed using zero-knowledge proofs, ensuring privacy while maintaining compliance.</p>
+                        </div>
+                        
+                        <div class="col-md-5">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Example Use Cases</h6>
+                                    
+                                    <div class="mb-2">
+                                        <strong><i class="fas fa-pills text-primary me-2"></i>Prescription Validation</strong>
+                                        <p class="text-muted small mb-0">Verify your authority to prescribe medications in specific jurisdictions</p>
+                                    </div>
+                                    
+                                    <div class="mb-2">
+                                        <strong><i class="fas fa-file-medical text-success me-2"></i>Certificate Issuance</strong>
+                                        <p class="text-muted small mb-0">Confirm your credentials to issue medical certificates</p>
+                                    </div>
+                                    
+                                    <div>
+                                        <strong><i class="fas fa-laptop-medical text-info me-2"></i>Cross-Border Telemedicine</strong>
+                                        <p class="text-muted small mb-0">Validate compliance with regulations in multiple countries</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const validationForm = document.getElementById('validationForm');
+        const loadingResult = document.getElementById('loadingResult');
+        const validationResult = document.getElementById('validationResult');
+        const technicalDetails = document.getElementById('technicalDetails');
+        const steps = document.querySelectorAll('.validation-steps .step');
+        
+        validationForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Reset steps
+            steps.forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            
+            // Show loading indicator
+            loadingResult.style.display = 'block';
+            validationResult.classList.remove('show');
+            
+            // Get form data
+            const action = document.getElementById('action').value;
+            const resourceType = document.getElementById('resource_type').value;
+            const resourceId = document.getElementById('resource_id').value;
+            
+            // Activate first step
+            document.getElementById('step1').classList.add('active');
+            
+            // Simulate step progression (in a real app, these would be triggered by actual API responses)
+            setTimeout(() => {
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step2').classList.add('active');
+                
+                setTimeout(() => {
+                    document.getElementById('step2').classList.remove('active');
+                    document.getElementById('step2').classList.add('completed');
+                    document.getElementById('step3').classList.add('active');
+                    
+                    setTimeout(() => {
+                        document.getElementById('step3').classList.remove('active');
+                        document.getElementById('step3').classList.add('completed');
+                        document.getElementById('step4').classList.add('active');
+                        
+                        // Send validation request
+                        const formData = new FormData();
+                        formData.append('action', action);
+                        formData.append('resource_id', resourceId);
+                        formData.append('resource_type', resourceType);
+                        
+                        fetch(`/oracle/validate/{{ agreement.id }}`, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Complete final step
+                            document.getElementById('step4').classList.remove('active');
+                            document.getElementById('step4').classList.add('completed');
+                            
+                            // Hide loading indicator
+                            loadingResult.style.display = 'none';
+                            
+                            // Display raw response
+                            technicalDetails.textContent = JSON.stringify(data, null, 2);
+                            
+                            // Build the formatted result
+                            const isValid = data.valid;
+                            let resultHTML = '';
+                            
+                            resultHTML += `
+                                <div class="text-center mb-4">
+                                    <div class="mb-3">
+                                        ${isValid ? 
+                                            '<i class="fas fa-check-circle fa-4x text-success"></i>' : 
+                                            '<i class="fas fa-times-circle fa-4x text-danger"></i>'}
+                                    </div>
+                                    <h3>${isValid ? 'Validation Successful' : 'Validation Failed'}</h3>
+                                    <p class="text-muted">Agreement ID: ${data.agreement_id}</p>
+                                    <p class="badge bg-primary">Validation ID: ${data.validation_id}</p>
+                                </div>
+                                
+                                <div class="card border-${isValid ? 'success' : 'danger'} mb-4">
+                                    <div class="card-header bg-${isValid ? 'success' : 'danger'} text-white">
+                                        <strong>Validation Summary</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Action:</strong> ${action}</p>
+                                                <p><strong>Resource:</strong> ${resourceType} (ID: ${resourceId})</p>
+                                                <p><strong>Timestamp:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p><strong>Actor Validated:</strong> ${data.validation_details.actor_validated ? 'Yes' : 'No'}</p>
+                                                <p><strong>Action Allowed:</strong> ${data.validation_details.action_allowed ? 'Yes' : 'No'}</p>
+                                                <p><strong>Resource Accessible:</strong> ${data.validation_details.resource_accessible ? 'Yes' : 'No'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // Add validated clauses
+                            if (data.validated_clauses && data.validated_clauses.length > 0) {
+                                resultHTML += `
+                                    <div class="mb-3">
+                                        <h5>Validated Clauses</h5>
+                                    </div>
+                                `;
+                                
+                                data.validated_clauses.forEach(clause => {
+                                    resultHTML += `
+                                        <div class="card oracle-clause valid mb-2">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                                    <strong>${clause}</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                            }
+                            
+                            // Add failed clauses
+                            if (data.failed_clauses && data.failed_clauses.length > 0) {
+                                resultHTML += `
+                                    <div class="mb-3 mt-4">
+                                        <h5>Failed Clauses</h5>
+                                    </div>
+                                `;
+                                
+                                data.failed_clauses.forEach(clause => {
+                                    resultHTML += `
+                                        <div class="card oracle-clause invalid mb-2">
+                                            <div class="card-body py-2">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-times-circle text-danger me-2"></i>
+                                                    <strong>${clause}</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                            }
+                            
+                            // Add ZK proof section if validation was successful
+                            if (isValid) {
+                                resultHTML += `
+                                    <div class="card mt-4">
+                                        <div class="card-header bg-light">
+                                            <strong><i class="fas fa-fingerprint me-2"></i>ZK Proof Generated</strong>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="mb-2">A zero-knowledge proof has been generated for this validation.</p>
+                                            <div class="alert alert-success">
+                                                <div class="d-flex">
+                                                    <div>
+                                                        <i class="fas fa-shield-alt fa-2x me-3"></i>
+                                                    </div>
+                                                    <div>
+                                                        <strong>Oracle Chain Verification Complete</strong>
+                                                        <p class="mb-0">This action is now cryptographically verified for compliance with all applicable regulations in ${agreement.country}.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            // Update the validation result
+                            validationResult.innerHTML = resultHTML;
+                            validationResult.classList.add('show');
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            loadingResult.style.display = 'none';
+                            validationResult.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    An error occurred during validation: ${error.message}
+                                </div>
+                            `;
+                            validationResult.classList.add('show');
+                            technicalDetails.textContent = `Error: ${error.message}`;
+                        });
+                    }, 1000);
+                }, 1000);
+            }, 1000);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,21 @@
+version: '3.3'
+
+services:
+  cassandra:
+    image: cassandra:3.11
+    container_name: zk-health-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_CLUSTER_NAME=zkhealth
+      - CASSANDRA_ENDPOINT_SNITCH=SimpleSnitch
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  cassandra-data:
