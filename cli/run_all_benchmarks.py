@@ -16,6 +16,7 @@ from benchmark_identity import run_identity_benchmarks
 from benchmark_document import run_document_benchmarks
 from benchmark_policy import run_policy_benchmarks
 from benchmark_gateway import run_gateway_benchmarks
+from benchmark_infrastructure import run_infrastructure_benchmarks
 
 console = Console()
 
@@ -42,6 +43,10 @@ def main():
     console.print("[bold]Running API Gateway Benchmarks...[/bold]")
     gateway_results = run_gateway_benchmarks(100)
     console.print("\n[green]✓[/green] API Gateway Benchmarks completed\n")
+    
+    console.print("[bold]Running Infrastructure Benchmarks...[/bold]")
+    infrastructure_results = run_infrastructure_benchmarks(100)
+    console.print("\n[green]✓[/green] Infrastructure Benchmarks completed\n")
     
     # Calculate total time
     total_time = time.time() - start_time
@@ -79,6 +84,13 @@ def main():
                      f"{metrics['avg_time']:.2f}", 
                      f"{metrics['throughput']:.2f}")
     
+    # Add infrastructure results
+    for op, metrics in infrastructure_results.items():
+        if isinstance(metrics, dict) and "avg_time" in metrics:
+            table.add_row("Infrastructure", op.replace("_", " ").title(), 
+                         f"{metrics['avg_time']:.2f}",
+                         f"{metrics.get('throughput', 'N/A')}")
+    
     console.print(table)
     
     # Display total time
@@ -90,6 +102,7 @@ def main():
         "document": document_results,
         "policy": policy_results,
         "gateway": gateway_results,
+        "infrastructure": infrastructure_results,
         "total_time": total_time
     }
     
@@ -128,6 +141,13 @@ def update_logs(results):
     log_entry += "\n### API Gateway\n"
     for op, metrics in results["gateway"].items():
         log_entry += f"- **{op.replace('_', ' ').title()}**: {metrics['avg_time']:.2f}ms, {metrics['throughput']:.2f} ops/sec\n"
+    
+    log_entry += "\n### Infrastructure\n"
+    for op, metrics in results["infrastructure"].items():
+        if isinstance(metrics, dict) and "avg_time" in metrics:
+            throughput = metrics.get('throughput', 'N/A')
+            throughput_str = f"{throughput:.2f} ops/sec" if isinstance(throughput, (int, float)) else throughput
+            log_entry += f"- **{op.replace('_', ' ').title()}**: {metrics['avg_time']:.2f}ms, {throughput_str}\n"
     
     log_entry += f"\n**Total benchmark time**: {results['total_time']:.2f} seconds\n"
     

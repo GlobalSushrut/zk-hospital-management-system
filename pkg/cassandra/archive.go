@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gocql/gocql"
+	"github.com/google/uuid"
 )
 
 // Document represents a document in the archive
@@ -272,13 +273,13 @@ func (ca *CassandraArchive) QueryByOwner(ownerID string) ([]Document, error) {
 	// Check if we should fall back to a simulated document
 	if docCount == 0 {
 		fmt.Printf("No documents found for owner %s, returning fallback document\n", ownerID)
-		
+
 		// Create a fallback document for benchmarking continuity
 		fallbackDoc := Document{
 			DocID:          uuid.New().String(),
 			DocType:        "fallback",
 			Owner:          ownerID,
-			HashID:         uuid.New(),
+			HashID:         gocql.UUIDFromTime(time.Now()),
 			Timestamp:      time.Now(),
 			ContentPreview: "Fallback document for benchmark continuity",
 			ContentHash:    "simulated_hash_" + uuid.New().String(),
@@ -288,6 +289,7 @@ func (ca *CassandraArchive) QueryByOwner(ownerID string) ([]Document, error) {
 				"doc_id": uuid.New().String(),
 			},
 		}
+
 		
 		documents = append(documents, fallbackDoc)
 	}

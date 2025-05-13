@@ -1,13 +1,11 @@
 package api
 
 import (
-	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"math/rand"
+	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -335,11 +333,7 @@ func (s *HealthServer) getDocumentsByOwner(w http.ResponseWriter, r *http.Reques
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 
-	// Query documents with a timeout context
-	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-	defer cancel()
-
-	// Perform the query with the context
+	// Perform the query
 	documents, err := s.CassandraArchive.QueryByOwner(ownerID)
 	if err != nil {
 		fmt.Printf("Error querying documents for %s: %v\n", ownerID, err)

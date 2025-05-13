@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,7 +13,10 @@ import (
 	"github.com/telemedicine/zkhealth/pkg/cassandra"
 	"github.com/telemedicine/zkhealth/pkg/consent"
 	"github.com/telemedicine/zkhealth/pkg/eventlog"
+	"github.com/telemedicine/zkhealth/pkg/infrastructure"
+	"github.com/telemedicine/zkhealth/pkg/monitoring"
 	"github.com/telemedicine/zkhealth/pkg/yag"
+	"github.com/telemedicine/zkhealth/pkg/zkcircuit"
 	"github.com/telemedicine/zkhealth/pkg/zkproof"
 )
 
@@ -101,6 +105,76 @@ func main() {
 	defer misalignmentTracker.Close(ctx)
 	log.Println("✓ Misalignment Tracker module initialized")
 
+	// Initialize infrastructure components
+	log.Println("Initializing infrastructure components...")
+	infrConfig := infrastructure.LoadConfigFromEnv()
+	infrastructureManager, err := infrastructure.NewInfrastructureManager(infrConfig)
+	if err != nil {
+		log.Fatalf("Failed to initialize infrastructure manager: %v", err)
+	}
+	
+	// Start infrastructure components
+	if err := infrastructureManager.Start(ctx); err != nil {
+		log.Fatalf("Failed to start infrastructure components: %v", err)
+	}
+	defer infrastructureManager.Stop()
+	log.Println("✓ Infrastructure components initialized")
+
+	// Initialize security components
+	log.Println("Initializing security components...")
+	securityManager := infrastructureManager.SecurityManager
+	// Start key rotation
+	securityManager.StartKeyRotation()
+	defer securityManager.StopKeyRotation()
+	log.Println("✓ Security components initialized")
+
+	// Initialize monitoring components
+	log.Println("Initializing monitoring components...")
+	healthChecker := infrastructureManager.HealthChecker
+	metricsCollector := infrastructureManager.MetricsCollector
+
+	// Start monitoring server if initialized
+	if infrastructureManager.MonitoringServer != nil {
+		log.Println("Monitoring server initialized")
+	}
+	
+	// Register the services in health check
+	healthChecker.AddCheck("zkidentity", "ZK Identity Service", func() (bool, string) {
+		// Check if the service is operational
+		return zkIdentity != nil, "ZK Identity service is initialized"
+	}, true)
+	
+	healthChecker.AddCheck("cassandra", "Cassandra Archive Service", func() (bool, string) {
+		// Check if the service is operational
+		return cassandraArchive != nil, "Cassandra Archive service is initialized"
+	}, true)
+	
+	log.Println("✓ Monitoring components initialized")
+
+	// Initialize ZK Circuit toolkit
+	log.Println("Initializing ZK Circuit toolkit...")
+	circuitCompiler := infrastructureManager.ZKCircuitCompiler
+
+	// Ensure circuit executor is ready
+	if infrastructureManager.ZKCircuitExecutor != nil {
+		log.Println("ZK Circuit executor initialized")
+	}
+	
+	// Load healthcare-specific circuit templates
+	templateManager := zkcircuit.NewTemplateManager()
+	for _, templateName := range templateManager.ListTemplates() {
+		template, found := templateManager.GetTemplate(templateName)
+		if found {
+			_, err := circuitCompiler.Compile(ctx, template)
+			if err != nil {
+				log.Printf("Warning: Failed to compile template %s: %v", templateName, err)
+			} else {
+				log.Printf("Successfully compiled circuit template: %s", templateName)
+			}
+		}
+	}
+	log.Println("✓ ZK Circuit toolkit initialized")
+
 	// Initialize API server
 	log.Println("Initializing API server...")
 	server := api.NewHealthServer(
@@ -111,9 +185,52 @@ func main() {
 		consentManager,
 		misalignmentTracker,
 	)
+
+	// We'll use the infrastructure components directly
+	log.Println("Configuring server with infrastructure components...")
+	
+	// Instead of using middleware directly, we'll wrap the handlers as needed
+	// The Router is already initialized in the server
+	
+	// We don't need to set the FHIR/EHR clients since they're used by the infrastructure manager
+	if infrastructureManager.FHIRClient != nil {
+		log.Println("FHIR interoperability initialized and available")
+	}
+	
+	if infrastructureManager.EHRClient != nil {
+		log.Println("EHR interoperability initialized and available")
+	}
+	
 	log.Printf("✓ API server initialized, starting on port %s", apiPort)
 
-	// Start API server
+	// Add request tracking middleware
+	requestTrackingMiddleware := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			startTime := time.Now()
+			
+			// Create a custom response writer to track status code
+			wrapper := NewResponseWriterWrapper(w)
+			
+			// Call the next handler
+			next.ServeHTTP(wrapper, r)
+			
+			// Record metrics
+			duration := time.Since(startTime)
+			path := r.URL.Path
+			method := r.Method
+			statusCode := wrapper.StatusCode()
+			
+			// Log the request
+			log.Printf("%s %s %d %s", method, path, statusCode, duration)
+			
+			// Track metrics
+			TrackRequest(metricsCollector, path, method, statusCode, duration)
+		})
+	}
+	// We'll apply middleware using the Router directly
+	server.Router.Use(requestTrackingMiddleware)
+
+	// Start API server with enhanced middleware
 	if err := server.Start(apiPort); err != nil {
 		log.Fatalf("Failed to start API server: %v", err)
 	}
@@ -126,4 +243,37 @@ func getEnv(key, defaultValue string) string {
 		return defaultValue
 	}
 	return value
+}
+
+// TrackRequest tracks HTTP request metrics
+func TrackRequest(m *monitoring.MetricsCollector, path, method string, statusCode int, duration time.Duration) {
+	// In a real implementation, this would use the metrics collector to record metrics
+	// For this demo implementation, we'll just log
+	log.Printf("METRIC: request_duration path=%s method=%s status=%d duration=%s", 
+		path, method, statusCode, duration)
+}
+
+// NewResponseWriterWrapper creates a new response writer wrapper
+func NewResponseWriterWrapper(w http.ResponseWriter) *ResponseWriterWrapper {
+	return &ResponseWriterWrapper{
+		ResponseWriter: w,
+		statusCode:     http.StatusOK, // Default status code
+	}
+}
+
+// ResponseWriterWrapper wraps a ResponseWriter to capture the status code
+type ResponseWriterWrapper struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+// WriteHeader captures the status code
+func (rww *ResponseWriterWrapper) WriteHeader(statusCode int) {
+	rww.statusCode = statusCode
+	rww.ResponseWriter.WriteHeader(statusCode)
+}
+
+// StatusCode returns the captured status code
+func (rww *ResponseWriterWrapper) StatusCode() int {
+	return rww.statusCode
 }

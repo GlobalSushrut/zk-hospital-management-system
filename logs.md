@@ -974,3 +974,38 @@ This validation confirms that all components of the ZK-Proof Based Decentralized
 - **Cross Service Auth**: 3.38ms, 295.65 ops/sec
 
 **Total benchmark time**: 13.41 seconds
+
+## Benchmark Results - 2025-05-13 09:00:01
+
+### Identity Management
+- **Zk Proof Generation**: 11.13ms, 89.83 ops/sec
+- **Identity Verification**: 6.02ms, 166.04 ops/sec
+- **Claim Validation**: 4.84ms, 206.66 ops/sec
+- **Identity Retrieval**: 3.82ms, 261.96 ops/sec
+
+### Document Management
+- **Document Upload**: 8.66ms, 115.48 ops/sec
+- **Document Verification**: 20.42ms, 48.97 ops/sec
+- **Document Retrieval**: 9.80ms, 102.08 ops/sec
+- **Document Zkproof**: 6.52ms, 153.30 ops/sec
+- **Selective Disclosure**: 7.81ms, 128.00 ops/sec
+- **Batch Processing**: 104.01ms, 120.18 ops/sec
+
+### Policy Validation
+- **Policy Validation**: 4.53ms, 220.95 ops/sec
+- **Cross Jurisdiction**: 4.56ms, 219.43 ops/sec
+- **Role Validation**: 3.40ms, 294.20 ops/sec
+- **Validator Selection**: 3.64ms, 274.47 ops/sec
+- **Policy Oracle Integration**: 3.26ms, 306.67 ops/sec
+
+### API Gateway
+- **Token Generation**: 5.32ms, 187.97 ops/sec
+- **Token Validation**: 5.05ms, 197.86 ops/sec
+- **Request Routing**: 3.91ms, 255.77 ops/sec
+- **Request Throttling**: 3.28ms, 304.60 ops/sec
+- **Rbac Verification**: 3.68ms, 271.38 ops/sec
+- **Cross Service Auth**: 4.71ms, 212.47 ops/sec
+
+### Infrastructure
+
+**Total benchmark time**: 61.43 seconds
